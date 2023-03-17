@@ -11,8 +11,10 @@ static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 480;
 
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t buf[screenWidth*GUI_BUFFER_LINES];
-// static lv_color_t buf2[screenWidth*GUI_BUFFER_LINES];
+static lv_color_t pixel_buf[screenWidth*GUI_BUFFER_LINES];
+#if GUI_BUFFER_2
+static lv_color_t pixel_buf2[screenWidth*GUI_BUFFER_LINES];
+#endif
 
 #if LV_USE_LOG != 0
 static void my_print(const char *buf)
@@ -29,7 +31,7 @@ static void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_
 
     tft.startWrite();
     tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors ((uint16_t*) &color_p->full, w*h, true);
+    tft.pushPixels ((uint16_t*) &color_p->full, w*h); // , true);
     tft.endWrite();
     lv_disp_flush_ready(disp);
 }
@@ -53,7 +55,7 @@ static void my_keyboard_read( lv_indev_drv_t *indev_driver, lv_indev_data_t *dat
     if (irkb.keyAvailable()) {
         int k = irkb.getKey();
         if (k&IRKB_IS_REPEAT) return;
-        logInfo("IR: %s%c\n", (k&IRKB_IS_REPEAT) ? "(repeat) " : "", k&IRKB_KEY_MASK);
+        logInfo("KEYBOARD: %s%c\n", (k&IRKB_IS_REPEAT) ? "(repeat) " : "", k&IRKB_KEY_MASK);
         data->key = k & 0xFF;
         data->state = LV_INDEV_STATE_PRESSED;
     } else {
@@ -150,12 +152,16 @@ static void focus_input_group(lv_event_t *e)
 
 void startGUI()
 {
-    logInfo("LVGL Startup");
+    logInfo("LVGL Startup\n");
     lv_init();
 #if LV_USE_LOG != 0
     lv_log_register_print_cb(my_print);
 #endif
-    lv_disp_draw_buf_init( &draw_buf, buf, NULL, screenWidth * GUI_BUFFER_LINES);
+#if GUI_BUFFER_2
+    lv_disp_draw_buf_init( &draw_buf, pixel_buf, pixel_buf2, screenWidth * GUI_BUFFER_LINES);
+#else
+    lv_disp_draw_buf_init( &draw_buf, pixel_buf, NULL, screenWidth * GUI_BUFFER_LINES);
+#endif
 
     // init LVGL display driver
 
@@ -168,12 +174,14 @@ void startGUI()
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
+#if HAVE_TOUCHPAD
     // init input device 
     static lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
+#endif /* HAVE_TOUCHPAD */
 
     static lv_indev_drv_t remote_drv;
     lv_indev_drv_init(&remote_drv);
@@ -181,10 +189,29 @@ void startGUI()
     remote_drv.read_cb = my_keyboard_read;
     keyboard = lv_indev_drv_register(&remote_drv);
 
-    // TODO: make 'keypad' device for remote?
+    lv_group_t *g = lv_group_create();
+    lv_group_set_default(g);
 
+    lv_indev_t *cur_drv =NULL;
+    for(;;) {
+        cur_drv = lv_indev_get_next(cur_drv);
+        if (!cur_drv) break;
+
+        if (cur_drv->driver->type == LV_INDEV_TYPE_KEYPAD || cur_drv->driver->type == LV_INDEV_TYPE_ENCODER) {
+            lv_indev_set_group(cur_drv,g);
+        }
+    }
     ui_init();
 
+    for(auto scr : { ui_TitleScreen, ui_SettingsScreen, ui_WiFiWizard1 } ) {
+        lv_obj_set_style_outline_color(scr, lv_color_hex(0xF8D800), LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_outline_opa(scr, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_outline_width(scr, 3, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_outline_pad(scr, 3, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_report_style_change(NULL);
+    }
+
+#if 0
     lv_group_t *g;
 
     /* title screen group */
@@ -232,8 +259,9 @@ void startGUI()
 
     // let all objects know to recompute style
     lv_obj_report_style_change(NULL);
+#endif
 
-    logInfo("LVGL: setup done");
+    logInfo("LVGL: setup done\n");
 }
 
 void pollGUI()

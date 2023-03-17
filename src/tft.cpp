@@ -6,21 +6,20 @@
 // if we have SMOOTH_FONT defined, we need this becauese tft_espi.h defines FS_NO_GLOBALS
 // using fs::File;
 
-TFT_eSPI tft = TFT_eSPI();
+// TFT_eSPI tft = TFT_eSPI();
+LGFX_Parallel8_ILI9488 tft;
+
+extern void colors(int);
 
 void beginTFT()
 {
     logInfo("Init TFT\n");
     // Initialise the TFT screen
     tft.init();
-#ifdef ESP32_DMA
-    // TODO: DMA seems to be f'd up.  maybe it needs a double buffer?
-    tft.initDMA(true);
-#endif // ESP32_DMA
 
-    ledcSetup(TFT_BL_PWM, 5000, 8); // 5KHz, 8bit resolution
-    ledcAttachPin(TFT_BL, TFT_BL_PWM);
-    tftBacklight(255);
+    // ledcSetup(TFT_BL_PWM, 5000, 8); // 5KHz, 8bit resolution
+    // ledcAttachPin(TFT_BL, TFT_BL_PWM);
+    // tftBacklight(255);
 
     // Set the rotation before we calibrate
     tft.setRotation(0);
@@ -29,18 +28,22 @@ void beginTFT()
     tft.fillScreen(TFT_BLACK);
 
 
+    colors(1000);
+
     logInfo("beginTFT: Done\n");
 }
 
 void tftBacklight(int value)
 {
-    ledcWrite(TFT_BL_PWM, value);
+    // ledcWrite(TFT_BL_PWM, value);
 }
 
 #define CALIBRATION_FILE "/TouchCalData2"
 
 void tftTouchCalibrate(bool repeat)
 {
+  return;
+#if 0
   uint16_t calData[5];
   uint8_t calDataOK = 0;
 
@@ -90,4 +93,5 @@ void tftTouchCalibrate(bool repeat)
       f.close();
     }
   }
+#endif
 }

@@ -5,6 +5,7 @@
 
 void touch_calibrate(bool forceCal)
 {
+  #if 0
   uint16_t calData[5];
   uint8_t calDataOK = 0;
 
@@ -60,4 +61,5 @@ void touch_calibrate(bool forceCal)
       f.close();
     }
   }
+  #endif
 }

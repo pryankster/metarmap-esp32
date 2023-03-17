@@ -2,7 +2,7 @@
 #include <SPIFFS.h>
 #include <TJpg_Decoder.h>
 
-#include "led.h"
+#include <FastLED.h>
 #include "tft.h"
 #include "filesystem.h"
 #include "webserver.h"
@@ -27,15 +27,12 @@ const char *versionString = "0.0.0";
 
 FASTLED_USING_NAMESPACE
 
-#define DATA_PIN    26
-//#define CLK_PIN   4
-#define LED_TYPE    WS2811
-#define COLOR_ORDER GRB
-#define NUM_LEDS    50
+#define LED_TYPE    WS2812
+#define COLOR_ORDER RGB
+#define NUM_LEDS    3
 CRGB leds[NUM_LEDS];
 
 #define BRIGHTNESS          96
-#define FRAMES_PER_SECOND  120
 
 // Create instances of the structs
 Wificonfig wificonfig;
@@ -123,6 +120,26 @@ void splash()
 }
 */
 
+#define BLOCK_SIZE (16)
+uint16_t block[BLOCK_SIZE * BLOCK_SIZE];
+
+void colors(int n)
+{
+    for (int i = 0; i < n; i++ ) {
+      uint16_t color = random16();
+      for (int i = 0; i < BLOCK_SIZE * BLOCK_SIZE; i++ ) {
+        block[i] = color;
+      } 
+      int x = random(0,LV_HOR_RES_MAX-BLOCK_SIZE);
+      int y = random(0,LV_VER_RES_MAX-BLOCK_SIZE);
+      tft.startWrite();
+      tft.setAddrWindow(x, y, BLOCK_SIZE, BLOCK_SIZE);
+      tft.pushPixels ((uint16_t*) block, BLOCK_SIZE*BLOCK_SIZE, true);
+      tft.endWrite();
+    }
+}
+
+
 void setup() 
 {
     // Use serial port
@@ -131,16 +148,23 @@ void setup()
     logInfo("STARTUP!\n");
 
     // tell FastLED about the LED strip configuration
-    FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-    //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<LED_TYPE,FASTLED_DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
     // set master brightness control
     FastLED.setBrightness(BRIGHTNESS);
     ledsOff();
 
+    // first three LEDS: red, green, blue.
+    leds[0] = CRGB::Red;
+    leds[1] = CRGB::Green;
+    leds[2] = CRGB::Blue;
+    FastLED.show();  
+
     // make sure that SD card is not listening..
+    /*
     pinMode( SDCARD_CS, OUTPUT );
     digitalWrite( SDCARD_CS, LOW );
+    */
 
     // --------------- Init Display -------------------------
 
@@ -154,7 +178,7 @@ void setup()
     setCpuFrequencyMhz(240);
 
     if ( ! beginFilesystem() ) {
-      drawErrorMessage("Failed to init FILESYSTEM! Did you upload the data folder?");
+      drawErrorMessage("Failed to init FILESYSTEM! Did you upload the data folder?\n");
       while (1)
         yield(); // We stop here
     }
@@ -181,7 +205,7 @@ void setup()
     {
       // But we do draw something to indicate we are waking up
       tft.setTextFont(2);
-      tft.println("Waking up...");
+      tft.println("Waking up...\n");
     }
     else
     {
@@ -222,12 +246,6 @@ void printFileList(String path)
 }
 */
 
-int frame = 0;
-// int bl = 0;
-int color = TFT_WHITE;
-
-int y = 42;
-uint32_t frameStart;
 void loop()
 {
     loopClock();
@@ -235,45 +253,41 @@ void loop()
     pollGUI();
 
     FastLED.show();
-    uint32_t frameEnd = micros();
-    uint32_t frameTime = frameEnd - frameStart;
-    frameStart = frameEnd;
-
-    /*
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    char buf[32];
-    sprintf(buf,"   %d %.4f  ", frame, frameTime/1000.0);
-    tft.drawString( buf, SCREEN_WIDTH/2, 400);
-    // y += 30;
-    // if (y > tft.height()) y = 40+random(5);
-    frame++;
-    // bl++;
-    // tftBacklight(bl & 0xFF);
-    */
 
     irkb.loop();
 
-    /*
+#if 0
     if (irkb.keyAvailable()) {
       int k = irkb.getKey();
-      logInfo("IR: %s%c\n", (k&IRKB_IS_REPEAT) ? "(repeat) " : "", k&IRKB_KEY_MASK);
+      logInfo("IRKEY: %s%c\n", (k&IRKB_IS_REPEAT) ? "(repeat) " : "", k&IRKB_KEY_MASK);
       switch(k &0xFF) {
         case IR_KEY_POWER:  // power
-            logInfo("Toggle repeat");
+            logInfo("Toggle repeat\n");
             irkb.setIgnoreRepeat(!irkb.getIgnoreRepeat());
             break;
         case IR_KEY_TIME:
             setEnableClock(!getEnableClock());
             logInfo("Clock Enabled: %s\n", getEnableClock() ? "YES" : "NO");
             break;
+        case IR_KEY_DOWN:
+            logInfo("Begin Colors!\n");
+            colors(1000);
+            logInfo("Done Colors!\n");
+            break;
         case IR_KEY_SETTINGS:
-            logInfo("Settings button pressed");
-            lv_scr_load(ui_SettingsScreen);
-            
+            logInfo("Settings button pressed\n");
+            if (lv_scr_act() == ui_SettingsScreen) {
+              logInfo("fade on title screen\n");
+              lv_scr_load_anim(ui_TitleScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
+            } else {
+              logInfo("fade on settings screen\n");
+              lv_scr_load_anim(ui_SettingsScreen, LV_SCR_LOAD_ANIM_OVER_LEFT, 500, 0, false);
+            }
+            break;
       }
     }
-    */
+#endif
+
 }
 
 void ledsOff()

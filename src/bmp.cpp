@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <TFT_eSPI.h> // The TFT_eSPI library
+// #include <TFT_eSPI.h> // The TFT_eSPI library
 #include "filesystem.h"
 #include "tft.h"
 #include "bmp.h"
