@@ -1,0 +1,16 @@
+{
+  "codename": "EmmettTitle",
+  "ttf_path": "\\assets\\Emmett__.ttf",
+  "bin_path": "\\assets\\ui_font_EmmettTitle.bin",
+  "c_path": "\\assets\\ui_font_EmmettTitle.c",
+  "cfg_path": "\\assets\\ui_font_EmmettTitle.fcfg",
+  "size": 40,
+  "bpp": 4,
+  "letters": 0,
+  "ranges": [
+    "0x20"
+  ],
+  "symbols": "?ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ap-",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

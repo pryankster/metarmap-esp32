@@ -48,11 +48,13 @@ void IRKeyboard::loop()
             if (IrReceiver.decodedIRData.protocol == NEC) {
                 IRKeyMap *p = findKey(IrReceiver.decodedIRData.address, IrReceiver.decodedIRData.command);
                 // found a key?
+                /*
                 logInfo("IR: '%c' Addr: 0x%02.2x, CMD: 0x%02.2x, Raw: 0x%08.8x\n", 
                     (p == NULL ? ' ' : p->ch),
                     IrReceiver.decodedIRData.address,
                     IrReceiver.decodedIRData.command,
                     IrReceiver.decodedIRData.decodedRawData);
+                */
 
                 if (p != NULL) {
                     // decodedRawData being 0 seems to indicate a repeat.

@@ -1,0 +1,16 @@
+{
+  "codename": "EmmettMED",
+  "ttf_path": "\\assets\\Emmett__.ttf",
+  "bin_path": "\\assets\\ui_font_EmmettMED.bin",
+  "c_path": "\\assets\\ui_font_EmmettMED.c",
+  "cfg_path": "\\assets\\ui_font_EmmettMED.fcfg",
+  "size": 20,
+  "bpp": 4,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

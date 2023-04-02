@@ -12,4 +12,8 @@
 // returns FALSE on error.
 bool beginFilesystem();
 
+// return a path to a data file (usu. /spiffs/XXX or /sd/data/XXX)
+// returns static data -- so can't nest calls without copying result!!
+char *data_path(const char *path);
+
 #endif // _H_FILESYSTEM_
