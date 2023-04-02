@@ -11,3 +11,5 @@ SquareLine/backup
 SquareLine/cache
 src/squareline
 src/Fonts
+platformio-device-monitor-*
+*.swp
