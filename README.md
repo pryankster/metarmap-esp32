@@ -67,7 +67,8 @@ but it was definitely worth the wait.
   The CPU board has a USB-C connector for power input.  You can also run it
   on a power-bank type battery tucked into the frame, but LEDs are pretty 
   power hungry, and the software doesn't currently use any of the low-power
-  features of the ESP-32.
+  features of the ESP-32.  My prototype, with about 42 airports/LEDs uses about
+  500ma-600ma when running full brightness.
 
 * **Wire** - One of the most tedious parts of building the map is wiring the 
   LEDs (keep that in mind when you decide to put every podunk airport within
